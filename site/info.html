@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статистика сообщений</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+        h2 {
+            color: #444;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, button {
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #4285f4;
+        }
+        .result-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .error {
+            color: #d32f2f;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Статистика сообщений</h1>
+        
+        <div class="section">
+            <h2>Статистика по пользователю</h2>
+            <div class="form-group">
+                <label for="userLogin">Введите логин пользователя:</label>
+                <input type="text" id="userLogin" placeholder="Например, user123">
+            </div>
+            <button id="getUserStats">Получить статистику</button>
+            
+            <div id="userResult" class="result" style="display: none;">
+                <p>Общее количество сообщений пользователя <span id="userLoginSpan" class="result-value"></span>:</p>
+                <p><span id="userMessagesCount" class="result-value">0</span> сообщений</p>
+            </div>
+            <div id="userError" class="error"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Общая статистика за период</h2>
+            <div class="form-group">
+                <label for="days">За последние сколько дней:</label>
+                <input type="number" id="days" min="1" value="7" placeholder="Например, 30">
+            </div>
+            <button id="getGeneralStats">Получить статистику</button>
+            
+            <div id="generalResult" class="result" style="display: none;">
+                <p>Общее количество сообщений за последние <span id="daysSpan" class="result-value">0</span> дней:</p>
+                <p><span id="generalMessagesCount" class="result-value">0</span> сообщений</p>
+            </div>
+            <div id="generalError" class="error"></div>
+        </div>
+    </div>
+
+    <script>
+        // Получение статистики по конкретному пользователю
+        document.getElementById('getUserStats').addEventListener('click', async () => {
+            const login = document.getElementById('userLogin').value.trim();
+            
+            if (!login) {
+                showError('userError', 'Введите логин пользователя');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/user-stats?login=${encodeURIComponent(login)}`);
+                
+                if (!response.ok) throw new Error('Ошибка получения статистики');
+                
+                const data = await response.json();
+                displayUserResults(data, login);
+            } catch (error) {
+                showError('userError', error.message);
+            }
+        });
+        
+        // Получение общей статистики за период
+        document.getElementById('getGeneralStats').addEventListener('click', async () => {
+            const days = document.getElementById('days').value;
+            
+            if (!days || days < 1) {
+                showError('generalError', 'Введите корректное число дней');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/general-stats?days=${days}`);
+                
+                if (!response.ok) throw new Error('Ошибка получения статистики');
+                
+                const data = await response.json();
+                displayGeneralResults(data, days);
+            } catch (error) {
+                showError('generalError', error.message);
+            }
+        });
+        
+        function displayUserResults(data, login) {
+            const resultDiv = document.getElementById('userResult');
+            resultDiv.style.display = 'block';
+            document.getElementById('userError').textContent = '';
+            
+            document.getElementById('userLoginSpan').textContent = login;
+            document.getElementById('userMessagesCount').textContent = data.total_messages;
+        }
+        
+        function displayGeneralResults(data, days) {
+            const resultDiv = document.getElementById('generalResult');
+            resultDiv.style.display = 'block';
+            document.getElementById('generalError').textContent = '';
+            
+            document.getElementById('daysSpan').textContent = days;
+            document.getElementById('generalMessagesCount').textContent = data.total_messages;
+        }
+        
+        function showError(elementId, message) {
+            document.getElementById(elementId).textContent = message;
+            
+            // Скрываем результаты при ошибке
+            if (elementId === 'userError') {
+                document.getElementById('userResult').style.display = 'none';
+            } else {
+                document.getElementById('generalResult').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

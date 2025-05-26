@@ -376,14 +376,22 @@
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${message.SenderID == ID ? 'sent' : 'received'}`;
                 
-                messageDiv.innerHTML = `
+                let date = new Date(message.Time)
+                if (message.SenderID == ID) {
+                    messageDiv.innerHTML = `
                     <div class="message-actions">
                         <button class="message-action edit-btn" data-message-id="${message.ID}">✏️</button>
                         <button class="message-action delete-btn" data-message-id="${message.ID}">🗑️</button>
                     </div>
                     <div class="message-text">${message.Text}</div>
-                    <div class="message-time">${new Date(message.Time).toLocaleTimeString()}</div>
-                `;
+                    <div class="message-time">${date.getHours()-3 + ':' + date.getMinutes() + ':' + date.getSeconds()}</div>
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                    <div class="message-text">${message.Text}</div>
+                    <div class="message-time">${date.getHours()-3 + ':' + date.getMinutes() + ':' + date.getSeconds()}</div>
+                    `;
+                }
                 
                 messagesList.appendChild(messageDiv);
             });

@@ -126,3 +126,25 @@ func (m *ModelManager) DeleteMessage(id int) error {
 	_, err := m.db.Exec(`DELETE FROM messages WHERE id = $1;`, id)
 	return err
 }
+
+// Получение общего количества сообщений пользователя
+func (m *ModelManager) GetUserMessagesCount(userID int) (int, error) {
+    var count int
+    err := m.db.QueryRow(`
+        SELECT COUNT(*) 
+        FROM messages 
+        WHERE sender_id = $1
+    `, userID).Scan(&count)
+    return count, err
+}
+
+// Получение количества сообщений за последние N дней (все пользователи)
+func (m *ModelManager) GetRecentMessagesCount(days int) (int, error) {
+    var count int
+    err := m.db.QueryRow(`
+        SELECT COUNT(*) 
+        FROM messages 
+        WHERE time >= NOW() - INTERVAL '1 day' * $1
+    `, days).Scan(&count)
+    return count, err
+}

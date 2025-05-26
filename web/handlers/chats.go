@@ -86,7 +86,7 @@ func (hm *HandlerManager) GetChatMessagesHandler(ctx *gin.Context) {
 	chatIDString := ctx.Params.ByName("chatID")
 	chatID, err := strconv.Atoi(chatIDString)
 	if err != nil {
-		ctx.String(http.StatusBadRequest, "Invalid chatID")
+		ctx.String(http.StatusBadRequest, "Недопустимый chatID")
 		return
 	}
 
@@ -114,7 +114,7 @@ func (hm *HandlerManager) SendMessageHandler(ctx *gin.Context) {
 	chatIDString := ctx.Params.ByName("chatID")
 	chatID, err := strconv.Atoi(chatIDString)
 	if err != nil {
-		ctx.String(http.StatusBadRequest, "Invalid chatID")
+		ctx.String(http.StatusBadRequest, "Недопустимый chatID")
 		return
 	}
 
@@ -135,7 +135,7 @@ func (hm *HandlerManager) SendMessageHandler(ctx *gin.Context) {
 
 func (hm *HandlerManager) UpdateMessageHandler(ctx *gin.Context) {
 	token := ctx.Query("token")
-	_, ok := hm.GetSession(token)
+	user, ok := hm.GetSession(token)
 	if !ok {
 		ctx.Redirect(http.StatusMovedPermanently, "/login")
 		return
@@ -144,7 +144,7 @@ func (hm *HandlerManager) UpdateMessageHandler(ctx *gin.Context) {
 	messageIDString := ctx.Params.ByName("messageID")
 	messageID, err := strconv.Atoi(messageIDString)
 	if err != nil {
-		ctx.String(http.StatusBadRequest, "Invalid messageID")
+		ctx.String(http.StatusBadRequest, "Недопустимый messageID")
 		return
 	}
 
@@ -157,6 +157,11 @@ func (hm *HandlerManager) UpdateMessageHandler(ctx *gin.Context) {
 	message, err := hm.ModelManager.GetMessageByID(messageID)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if message.SenderID != user.ID {
+		ctx.String(http.StatusForbidden, "Вы не можете редактировать это сообщение")
 		return
 	}
 
@@ -181,7 +186,7 @@ func (hm *HandlerManager) DeleteMessageHandler(ctx *gin.Context) {
 	messageIDString := ctx.Params.ByName("messageID")
 	messageID, err := strconv.Atoi(messageIDString)
 	if err != nil {
-		ctx.String(http.StatusBadRequest, "Invalid messageID")
+		ctx.String(http.StatusBadRequest, "Недопустимый messageID")
 		return
 	}
 

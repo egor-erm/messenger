@@ -28,6 +28,7 @@ func (w *Web) loadHandlers() {
 	w.router.GET("/login", w.HandlerManager.LoginHandler)
 	w.router.GET("/register", w.HandlerManager.RegisterHandler)
 	w.router.GET("/chats", w.HandlerManager.ChatsHandler)
+	w.router.GET("/info", w.HandlerManager.InfoHandler)
 
 	w.router.POST("/login", w.HandlerManager.LoginDataHandler)
 	w.router.POST("/register", w.HandlerManager.RegisterDataHandler)
@@ -39,6 +40,9 @@ func (w *Web) loadHandlers() {
 	w.router.POST("/api/chats/:chatID/messages", w.HandlerManager.SendMessageHandler)
 	w.router.PUT("/api/messages/:messageID", w.HandlerManager.UpdateMessageHandler)
 	w.router.DELETE("/api/messages/:messageID", w.HandlerManager.DeleteMessageHandler)
+
+	w.router.GET("/api/user-stats", w.HandlerManager.UserInfoHandler)
+	w.router.GET("/api/general-stats", w.HandlerManager.AllInfoHandler)
 }
 
 func (w *Web) Run() {
