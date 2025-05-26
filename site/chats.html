@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мессенджер - Чаты</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        
+        /* Панель чатов */
+        .chats-panel {
+            width: 300px;
+            background-color: #fff;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .chats-header {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chats-list {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        
+        .chat-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .chat-item:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .chat-item.active {
+            background-color: #e3f2fd;
+        }
+        
+        .chat-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .chat-last-message {
+            color: #666;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .add-chat-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #4285f4;
+        }
+        
+        /* Панель сообщений */
+        .messages-panel {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .messages-header {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            background-color: #fff;
+        }
+        
+        .messages-list {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        
+        .message {
+            max-width: 70%;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            position: relative;
+        }
+        
+        .message.sent {
+            background-color: #dcf8c6;
+            margin-left: auto;
+        }
+        
+        .message.received {
+            background-color: #fff;
+            margin-right: auto;
+            border: 1px solid #ddd;
+        }
+        
+        .message-text {
+            margin-bottom: 5px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+        }
+        
+        .message-actions {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            display: none;
+        }
+        
+        .message:hover .message-actions {
+            display: block;
+        }
+        
+        .message-action {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            margin-left: 5px;
+        }
+        
+        .message-input-container {
+            padding: 15px;
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+            display: flex;
+        }
+        
+        .message-input {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 16px;
+        }
+        
+        .send-btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+        }
+        
+        .modal-title {
+            margin-bottom: 20px;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .modal-btn {
+            padding: 8px 15px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .modal-btn.cancel {
+            background-color: #f1f1f1;
+        }
+        
+        .modal-btn.confirm {
+            background-color: #4285f4;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Панель чатов -->
+    <div class="chats-panel">
+        <div class="chats-header">
+            <h2>Чаты</h2>
+            <button class="add-chat-btn" id="addChatBtn">+</button>
+        </div>
+        <div class="chats-list" id="chatsList">
+            <!-- Чаты будут загружаться здесь -->
+        </div>
+    </div>
+    
+    <!-- Панель сообщений -->
+    <div class="messages-panel">
+        <div class="messages-header" id="messagesHeader">
+            <h2>Выберите чат</h2>
+        </div>
+        <div class="messages-list" id="messagesList">
+            <!-- Сообщения будут загружаться здесь -->
+        </div>
+        <div class="message-input-container">
+            <input type="text" class="message-input" id="messageInput" placeholder="Введите сообщение..." disabled>
+            <button class="send-btn" id="sendBtn" disabled>Отправить</button>
+        </div>
+    </div>
+    
+    <!-- Модальное окно добавления чата -->
+    <div class="modal" id="addChatModal">
+        <div class="modal-content">
+            <h3 class="modal-title">Новый чат</h3>
+            <input type="text" class="modal-input" id="userLoginInput" placeholder="Логин пользователя">
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="cancelAddChatBtn">Отмена</button>
+                <button class="modal-btn confirm" id="confirmAddChatBtn">Создать</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const ID = {{.ID}};
+        const searchString = new URLSearchParams(window.location.search);
+        const token = searchString.get('token');
+
+        // Текущий выбранный чат
+        let currentChatId = null;
+
+        setInterval(() => {
+            loadChats();
+            if (currentChatId !== null) {
+                loadMessages(currentChatId);
+            }
+        }, 3000);
+        
+        // Загрузка чатов при загрузке страницы
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadChats();
+            setupEventListeners();
+        });
+        
+        // Загрузка списка чатов
+        async function loadChats() {
+            try {
+                const response = await fetch('/api/chats?token='+token);
+                if (!response.ok) throw new Error('Ошибка загрузки чатов');
+                
+                const chats = await response.json();
+                renderChats(chats);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Не удалось загрузить чаты');
+            }
+        }
+        
+        // Отображение списка чатов
+        function renderChats(chats) {
+            const chatsList = document.getElementById('chatsList');
+            chatsList.innerHTML = '';
+            
+            if (chats.length === 0) {
+                chatsList.innerHTML = '<div style="padding: 15px; color: #666;">У вас пока нет чатов</div>';
+                return;
+            }
+            
+            chats.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-item';
+                chatItem.dataset.chatId = chat.ID;
+                
+                chatItem.innerHTML = `
+                    <div class="chat-name">${chat.Name} ${chat.Surname}</div>
+                    <div class="chat-last-message">${chat.LastMessage || 'Нет сообщений'}</div>
+                `;
+                
+                chatItem.addEventListener('click', () => selectChat(chat.ID));
+                chatsList.appendChild(chatItem);
+            });
+        }
+        
+        // Выбор чата
+        async function selectChat(chatId) {
+            currentChatId = chatId;
+            
+            // Обновляем активный элемент в списке чатов
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.chatId == chatId);
+            });
+            
+            // Загружаем сообщения для выбранного чата
+            await loadMessages(chatId);
+            
+            // Активируем поле ввода сообщения
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            
+            // Обновляем заголовок
+            const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+            const chatName = chatItem.querySelector('.chat-name').textContent;
+            document.getElementById('messagesHeader').innerHTML = `<h2>${chatName}</h2>`;
+        }
+        
+        // Загрузка сообщений чата
+        async function loadMessages(chatId) {
+            try {
+                const response = await fetch(`/api/chats/${chatId}/messages?token=`+token);
+                if (!response.ok) throw new Error('Ошибка загрузки сообщений');
+                
+                const messages = await response.json();
+                renderMessages(messages);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Не удалось загрузить сообщения');
+            }
+        }
+        
+        // Отображение сообщений
+        function renderMessages(messages) {
+            const messagesList = document.getElementById('messagesList');
+            messagesList.innerHTML = '';
+            
+            if (messages.length === 0) {
+                messagesList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Нет сообщений</div>';
+                return;
+            }
+            
+            messages.forEach(message => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${message.SenderID == ID ? 'sent' : 'received'}`;
+                
+                messageDiv.innerHTML = `
+                    <div class="message-actions">
+                        <button class="message-action edit-btn" data-message-id="${message.ID}">✏️</button>
+                        <button class="message-action delete-btn" data-message-id="${message.ID}">🗑️</button>
+                    </div>
+                    <div class="message-text">${message.Text}</div>
+                    <div class="message-time">${new Date(message.Time).toLocaleTimeString()}</div>
+                `;
+                
+                messagesList.appendChild(messageDiv);
+            });
+            
+            // Прокрутка к последнему сообщению
+            messagesList.scrollTop = messagesList.scrollHeight;
+        }
+        
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Кнопка добавления чата
+            document.getElementById('addChatBtn').addEventListener('click', () => {
+                document.getElementById('addChatModal').style.display = 'flex';
+            });
+            
+            // Кнопка отмены в модальном окне
+            document.getElementById('cancelAddChatBtn').addEventListener('click', () => {
+                document.getElementById('addChatModal').style.display = 'none';
+            });
+            
+            // Кнопка подтверждения создания чата
+            document.getElementById('confirmAddChatBtn').addEventListener('click', async () => {
+                const userLogin = document.getElementById('userLoginInput').value.trim();
+                if (!userLogin) return;
+                
+                try {
+                    const response = await fetch('/api/chats?token='+token, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ userLogin })
+                    });
+                    
+                    if (!response.ok) throw new Error('Ошибка создания чата');
+                    
+                    document.getElementById('addChatModal').style.display = 'none';
+                    document.getElementById('userLoginInput').value = '';
+                    await loadChats();
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    alert('Не удалось создать чат');
+                }
+            });
+            
+            // Отправка сообщения
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            // Удаление сообщения (делегирование событий)
+            document.getElementById('messagesList').addEventListener('click', async (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const messageId = e.target.dataset.messageId;
+                    if (confirm('Удалить это сообщение?')) {
+                        await deleteMessage(messageId);
+                    }
+                }
+                
+                if (e.target.classList.contains('edit-btn')) {
+                    const messageId = e.target.dataset.messageId;
+                    const messageText = prompt('Редактировать сообщение:', 
+                        e.target.closest('.message').querySelector('.message-text').textContent);
+                    
+                    if (messageText !== null) {
+                        await editMessage(messageId, messageText);
+                    }
+                }
+            });
+        }
+        
+        // Отправка сообщения
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+            
+            try {
+                const response = await fetch(`/api/chats/${currentChatId}/messages?token=`+token, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+                
+                if (!response.ok) throw new Error('Ошибка отправки сообщения');
+                
+                input.value = '';
+                await loadMessages(currentChatId);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Не удалось отправить сообщение');
+            }
+        }
+        
+        // Редактирование сообщения
+        async function editMessage(messageId, newText) {
+            try {
+                const response = await fetch(`/api/messages/${messageId}?token=`+token, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: newText })
+                });
+                
+                if (!response.ok) throw new Error('Ошибка редактирования сообщения');
+                
+                await loadMessages(currentChatId);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Не удалось редактировать сообщение');
+            }
+        }
+        
+        // Удаление сообщения
+        async function deleteMessage(messageId) {
+            try {
+                const response = await fetch(`/api/messages/${messageId}?token=`+token, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('Ошибка удаления сообщения');
+                
+                await loadMessages(currentChatId);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Не удалось удалить сообщение');
+            }
+        }
+    </script>
+</body>
+</html>
