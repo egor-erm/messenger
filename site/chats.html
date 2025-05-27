@@ -384,12 +384,12 @@
                         <button class="message-action delete-btn" data-message-id="${message.ID}">🗑️</button>
                     </div>
                     <div class="message-text">${message.Text}</div>
-                    <div class="message-time">${date.getHours()-3 + ':' + date.getMinutes() + ':' + date.getSeconds()}</div>
+                    <div class="message-time">${date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0') + ':' + date.getSeconds()}</div>
                     `;
                 } else {
                     messageDiv.innerHTML = `
                     <div class="message-text">${message.Text}</div>
-                    <div class="message-time">${date.getHours()-3 + ':' + date.getMinutes() + ':' + date.getSeconds()}</div>
+                    <div class="message-time">${date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0') + ':' + date.getSeconds()}</div>
                     `;
                 }
                 
@@ -469,6 +469,8 @@
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
             if (!text || !currentChatId) return;
+
+            input.value = '';
             
             try {
                 const response = await fetch(`/api/chats/${currentChatId}/messages?token=`+token, {
@@ -481,7 +483,6 @@
                 
                 if (!response.ok) throw new Error('Ошибка отправки сообщения');
                 
-                input.value = '';
                 await loadMessages(currentChatId);
             } catch (error) {
                 console.error('Ошибка:', error);
