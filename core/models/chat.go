@@ -42,6 +42,7 @@ func (m *ModelManager) CreateChat(creatorID, memberID int) (*Chat, error) {
 	if err != nil {
 		return nil, err
 	}
+	
 	if rows.Next() {
 		return nil, errors.New("чат уже существует")
 	}
