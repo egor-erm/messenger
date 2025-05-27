@@ -277,7 +277,7 @@
         setInterval(() => {
             loadChats();
             if (currentChatId !== null) {
-                loadMessages(currentChatId);
+                loadMessages(currentChatId, false);
             }
         }, 3000);
         
@@ -336,7 +336,7 @@
             });
             
             // Загружаем сообщения для выбранного чата
-            await loadMessages(chatId);
+            await loadMessages(chatId, true);
             
             // Активируем поле ввода сообщения
             document.getElementById('messageInput').disabled = false;
@@ -349,13 +349,13 @@
         }
         
         // Загрузка сообщений чата
-        async function loadMessages(chatId) {
+        async function loadMessages(chatId, scroll) {
             try {
                 const response = await fetch(`/api/chats/${chatId}/messages?token=`+token);
                 if (!response.ok) throw new Error('Ошибка загрузки сообщений');
                 
                 const messages = await response.json();
-                renderMessages(messages);
+                renderMessages(messages, scroll);
             } catch (error) {
                 console.error('Ошибка:', error);
                 alert('Не удалось загрузить сообщения');
@@ -363,7 +363,7 @@
         }
         
         // Отображение сообщений
-        function renderMessages(messages) {
+        function renderMessages(messages, scroll) {
             const messagesList = document.getElementById('messagesList');
             messagesList.innerHTML = '';
             
@@ -397,7 +397,7 @@
             });
             
             // Прокрутка к последнему сообщению
-            messagesList.scrollTop = messagesList.scrollHeight;
+            if (scroll) messagesList.scrollTop = messagesList.scrollHeight;
         }
         
         // Настройка обработчиков событий
@@ -483,7 +483,7 @@
                 
                 if (!response.ok) throw new Error('Ошибка отправки сообщения');
                 
-                await loadMessages(currentChatId);
+                await loadMessages(currentChatId, true);
             } catch (error) {
                 console.error('Ошибка:', error);
                 alert('Не удалось отправить сообщение');
@@ -503,7 +503,7 @@
                 
                 if (!response.ok) throw new Error('Ошибка редактирования сообщения');
                 
-                await loadMessages(currentChatId);
+                await loadMessages(currentChatId, false);
             } catch (error) {
                 console.error('Ошибка:', error);
                 alert('Не удалось редактировать сообщение');
@@ -519,7 +519,7 @@
                 
                 if (!response.ok) throw new Error('Ошибка удаления сообщения');
                 
-                await loadMessages(currentChatId);
+                await loadMessages(currentChatId, false);
             } catch (error) {
                 console.error('Ошибка:', error);
                 alert('Не удалось удалить сообщение');
